@@ -1,0 +1,17 @@
+﻿@page
+@model TeamBlackHats.Pages.SportSelectionModel
+@{
+    ViewData["Title"] = "Sport Selection";
+}
+
+<h1>Sport Selection</h1>
+
+<div id="buttonPanel">
+    <button id="footballButton">Football</button>
+    <button id="baseballButton">Baseball</button>
+    <button id="basketballButton">Basketball</button>
+</div>
+
+@section scripts {
+    <script src="~/js/sportSelection.js"></script>
+}
