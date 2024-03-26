@@ -304,5 +304,71 @@ namespace TeamBlackHatsAPI.Controllers
 
             return new JsonResult(table);
         }
+
+        [HttpGet]
+        [Route("GetUsers")]
+
+        public JsonResult GetUsers()
+        {
+            string? query = "select * from dbo.Users";
+            DataTable table = new DataTable();
+            string? sqlDatasource = _configuration.GetConnectionString("blackHatsDBCon");
+            SqlDataReader myReader;
+            using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+
+            return new JsonResult(table);
+        }
+
+        [HttpPost]
+        [Route("AddUsers")]
+
+        public IActionResult AddUsers(User user)
+        {
+            string? query = "INSERT INTO dbo.Users (Username, Password) VALUES (@Username, @Password)";
+            string? sqlDatasource = _configuration.GetConnectionString("blackHatsDBCon");
+
+            using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myCommand.Parameters.AddWithValue("@Username", user.Username);
+                    myCommand.Parameters.AddWithValue("@Password", user.Password);
+                    myCommand.ExecuteNonQuery();
+                }
+            }
+
+            return Ok("User added successfully.");
+        }
+
+        [HttpDelete]
+        [Route("DeleteUsers")]
+        public IActionResult DeleteUsers(string Username)
+        {
+            string? query = "DELETE FROM dbo.Users WHERE Username = @Username";
+            string? sqlDatasource = _configuration.GetConnectionString("blackHatsDBCon");
+
+            using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myCommand.Parameters.AddWithValue("@Username", Username);
+                    myCommand.ExecuteNonQuery();
+                }
+            }
+
+            return Ok("User deleted successfully.");
+        }
     }
 }
