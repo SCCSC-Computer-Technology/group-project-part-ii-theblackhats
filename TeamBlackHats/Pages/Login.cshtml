@@ -1,19 +1,31 @@
 ﻿@page
 @model TeamBlackHats.Pages.LoginModel
 @{
-    ViewData["Title"] = "Log In";
 }
 
-<h1>Log In</h1>
-
-<form method="post">
-    <div>
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username">
-    </div>
-    <div>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password">
-    </div>
-    <button type="submit">Login</button>
-</form>
+<div class="container border" style="padding:20px">
+    <form method="post">
+        <div class="form-group row">
+            <div class="col-3">
+                <label asp-for="Credential.Username" class="col-form-label">Username:</label>
+            </div>
+            <div class="col-5">
+                <input type="text" asp-for="Credential.Username" class="form-control" />
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col-3">
+                <label asp-for="Credential.Password" class="col-form-label">Password:</label>
+            </div>
+            <div class="col-5">
+                <input type="password" asp-for="Credential.Password" class="form-control" />
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col-5 offset-3">
+                <button type="submit" class="btn btn-primary" name="action" value="login">Login</button>
+                <button type="submit" class="btn btn-success ml-2" name="action" value="addUser">Add New User</button>
+            </div>
+        </div>
+    </form>
+</div>

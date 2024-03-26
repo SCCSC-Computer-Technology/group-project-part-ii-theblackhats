@@ -15,6 +15,8 @@ namespace TeamBlackHats
             builder.Services.AddServerSideBlazor();
             builder.Services.AddSingleton<WeatherForecastService>();
 
+            builder.Services.AddHttpClient();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
