@@ -1,5 +1,6 @@
 
 using Newtonsoft.Json.Serialization;
+using System.Data.Common;
 
 namespace TeamBlackHatsAPI
 {
@@ -21,6 +22,20 @@ namespace TeamBlackHatsAPI
             builder.Services.AddControllers().AddNewtonsoftJson(options=>options.SerializerSettings.ReferenceLoopHandling=Newtonsoft.Json.ReferenceLoopHandling.Ignore).AddNewtonsoftJson( 
                 options=>options.SerializerSettings.ContractResolver=new DefaultContractResolver());
 
+
+            // Load environment variables
+            DotEnvReader dotEnvReader = new DotEnvReader();
+            bool dotEnvOk = dotEnvReader.LoadEnv();
+
+            // Create database connection
+            if (!dotEnvOk)
+            {
+                Console.WriteLine("Environment variable file not found or contains bad syntax. Ignoring...");
+            }
+
+            // Connect to the database
+            NFLDBConnection.Connect(); // may raise exception if database didn't connect. let the program crash if so
+
             var app = builder.Build();
 
             //Enable CORS
@@ -41,6 +56,8 @@ namespace TeamBlackHatsAPI
             app.MapControllers();
 
             app.Run();
+
+            NFLDBConnection.Disconnect();
         }
     }
 }
