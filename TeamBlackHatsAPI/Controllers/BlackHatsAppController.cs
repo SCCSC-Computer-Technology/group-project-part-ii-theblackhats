@@ -332,6 +332,7 @@ namespace TeamBlackHatsAPI.Controllers
         [HttpPost]
         [Route("AddUsers")]
 
+        /*
         public IActionResult AddUsers(User user)
         {
             string? query = "INSERT INTO dbo.Users (Username, Password) VALUES (@Username, @Password)";
@@ -350,6 +351,7 @@ namespace TeamBlackHatsAPI.Controllers
 
             return Ok("User added successfully.");
         }
+        */
 
         [HttpDelete]
         [Route("DeleteUsers")]

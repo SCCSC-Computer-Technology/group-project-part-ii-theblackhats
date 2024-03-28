@@ -1,6 +1,8 @@
-
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Serialization;
 using System.Data.Common;
+using System.Data.SqlClient;
+using TeamBlackHatsAPI.Models;
 
 namespace TeamBlackHatsAPI
 {
@@ -8,6 +10,15 @@ namespace TeamBlackHatsAPI
     {
         public static void Main(string[] args)
         {
+
+            // Load environment variables
+            DotEnvReader dotEnvReader = new DotEnvReader();
+            bool dotEnvOk = dotEnvReader.LoadEnv();
+            if (!dotEnvOk)
+            {
+                Console.WriteLine("Environment variable file not found or contains bad syntax. Ignoring...");
+            }
+
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
@@ -22,16 +33,28 @@ namespace TeamBlackHatsAPI
             builder.Services.AddControllers().AddNewtonsoftJson(options=>options.SerializerSettings.ReferenceLoopHandling=Newtonsoft.Json.ReferenceLoopHandling.Ignore).AddNewtonsoftJson( 
                 options=>options.SerializerSettings.ContractResolver=new DefaultContractResolver());
 
+            // generate connection string
+            var stringBuilder = new SqlConnectionStringBuilder();
+            string? dbLocation = Environment.GetEnvironmentVariable("DB_LOCATION");
+            string? dbUsername = Environment.GetEnvironmentVariable("DB_USERNAME");
+            string? dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
+            string? dbCatalog = Environment.GetEnvironmentVariable("DB_CATALOG");
 
-            // Load environment variables
-            DotEnvReader dotEnvReader = new DotEnvReader();
-            bool dotEnvOk = dotEnvReader.LoadEnv();
+            if (dbLocation == null) { dbLocation = "localhost"; }
+            if (dbUsername == null) { dbUsername = "username"; }
+            if (dbPassword == null) { dbPassword = "password"; }
+            if (dbCatalog == null) { dbCatalog = "catalog"; }
 
-            // Create database connection
-            if (!dotEnvOk)
-            {
-                Console.WriteLine("Environment variable file not found or contains bad syntax. Ignoring...");
-            }
+            stringBuilder.DataSource = dbLocation;
+            stringBuilder.UserID = dbUsername;
+            stringBuilder.Password = dbPassword;
+            stringBuilder.InitialCatalog = dbCatalog;
+            stringBuilder.TrustServerCertificate = true;
+
+            // use sql server
+            builder.Services.AddDbContext<UserContext>(
+                    options => options.UseSqlServer(stringBuilder.ConnectionString)
+                );
 
             // Connect to the database
             NFLDBConnection.Connect(); // may raise exception if database didn't connect. let the program crash if so
