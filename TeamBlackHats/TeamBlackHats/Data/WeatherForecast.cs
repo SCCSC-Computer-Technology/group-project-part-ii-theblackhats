@@ -1,4 +1,4 @@
-namespace TeamBlackHatsAPI
+namespace TeamBlackHats.Data
 {
     public class WeatherForecast
     {
