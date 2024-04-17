@@ -1,0 +1,95 @@
+﻿@page "/Login"
+@using System.Text.Json
+@using System.Text
+@inject IJSRuntime JsRuntime
+
+
+<h3>Login</h3>
+<p>
+    <input @bind="userName"/>;
+    <input @bind="passWord"/>;
+    <button @onclick="addUser">Add UserName And Password</button>
+</p>
+@foreach(var u in user)
+{
+    <p>
+        <b>*@u.Username</b>
+        <button @onclick="(()=>deleteUser(u.Username))">Delete User</button>
+    </p>
+}
+
+
+@code {
+    public string userName = "";
+    public string passWord = "";
+    public class User
+    {
+        public int UserId { get; set; }
+        public string? Username { get; set; }
+        public string? Password { get; set; }
+    }
+
+    string API_URL = "https://localhost:7275/api/BlackHatsApp/";
+
+    private IEnumerable<User> user = Array.Empty<User>();
+
+    private async Task refreshList()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "GetUsers");
+        httpClient.Dispose();
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        user = await JsonSerializer.DeserializeAsync<IEnumerable<User>>(responseStream);
+    }
+
+    private async Task addUser()
+    {
+        // Create an anonymous object to hold user data
+        var userData = new
+        {
+            UserName = userName,
+            Password = passWord
+        };
+
+        // Serialize the user data to JSON
+        var jsonContent = JsonSerializer.Serialize(userData);
+
+        // Create StringContent with JSON data and specify the content type
+        var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+        // Send POST request with JSON content
+        using var httpClient = new HttpClient();
+        var response = await httpClient.PostAsync(API_URL + "AddUsers", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            string res = await response.Content.ReadAsStringAsync();
+            await JsRuntime.InvokeVoidAsync("alert", res);
+            await this.refreshList();
+        }
+        else
+        {
+            string error = $"Failed to add user. Status code: {response.StatusCode}";
+            await JsRuntime.InvokeVoidAsync("alert", error);
+        }
+    }
+
+    private async Task deleteUser(string username)
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.DeleteAsync(API_URL + "DeleteUsers?Username=" + username);
+        httpClient.Dispose();
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+
+        string res = response.Content.ReadAsStringAsync().Result;
+        await JsRuntime.InvokeVoidAsync("alert", res);
+        await this.refreshList();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await this.refreshList();
+    }
+
+   
+}
