@@ -1,0 +1,12 @@
+﻿@page "/logout"
+@using TeamBlackHats.Services
+@inject NavigationManager NavigationManager
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthState.LogoutUser();
+        NavigationManager.NavigateTo("/", true);
+    }
+}

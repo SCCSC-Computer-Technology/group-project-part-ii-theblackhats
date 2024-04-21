@@ -1,9 +1,16 @@
 ﻿@page "/"
+@using TeamBlackHats.Services
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+@if(AuthState.Authenticated)
+{
+    <h1>Hello, @AuthState.Username!</h1>
+    <p>Click one of the links to check out some amazing sports statistics!</p>
+}
+else 
+{
+    <h1>Welcome!</h1>
+    <p>Login or signup to check out some awesome sports statistics!</p>
+}
 
-Welcome to your new app.
-
-<SurveyPrompt Title="How is Blazor working for you?" />
