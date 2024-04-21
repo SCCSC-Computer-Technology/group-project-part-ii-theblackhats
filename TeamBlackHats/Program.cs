@@ -19,17 +19,6 @@ namespace TeamBlackHats
 
             builder.Services.AddHttpClient();
 
-            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(
-                    options =>
-                    {
-                        options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
-                        options.SlidingExpiration = true;
-                        options.AccessDeniedPath = "/Forbidden/";
-                    }
-                );
-            builder.Services.AddHttpContextAccessor();
-            builder.Services.AddScoped<HttpContextAccessor>();
-
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -48,10 +37,6 @@ namespace TeamBlackHats
 
             app.MapBlazorHub();
             app.MapFallbackToPage("/_Host");
-
-            app.UseAuthentication();
-            app.UseAuthorization();
-            app.UseCookiePolicy(new CookiePolicyOptions() { MinimumSameSitePolicy = SameSiteMode.Strict });
 
             app.Run();
         }
