@@ -351,6 +351,31 @@ namespace TeamBlackHatsAPI.Controllers
             return Ok("User added successfully.");
         }
 
+        [HttpPost]
+        [Route("Authenticate")]
+        public IActionResult AuthenticateUser(User user)
+        {
+            string query = "SELECT Userid FROM dbo.Users WHERE Username = @username AND Password = @password";
+            string? sqlDatasource = _configuration.GetConnectionString("blackHatsDBCon");
+            DataTable table = new DataTable();
+            SqlDataReader myReader;
+            using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myCommand.Parameters.AddWithValue("@username", user.Username);
+                    myCommand.Parameters.AddWithValue("@password", user.Password);
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+
+            return new JsonResult(table);
+        }
+
         [HttpDelete]
         [Route("DeleteUsers")]
         public IActionResult DeleteUsers(string Username)

@@ -1,95 +1,78 @@
-﻿@page "/Login"
+﻿@page "/login"
 @using System.Text.Json
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Components.Authorization;
 @using System.Text
+@using TeamBlackHats.Services
 @inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
 
-
-<h3>Login</h3>
-<p>
-    <input @bind="userName"/>;
-    <input @bind="passWord"/>;
-    <button @onclick="addUser">Add UserName And Password</button>
-</p>
-@foreach(var u in user)
-{
-    <p>
-        <b>*@u.Username</b>
-        <button @onclick="(()=>deleteUser(u.Username))">Delete User</button>
-    </p>
-}
-
+<h4>Login</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form>
+            <div class="text-danger"></div>
+            <div class="form-group">
+                <label for="username" class="control-label">Username:</label>
+                <input class="form-control" @bind="user.Username" />
+            </div>
+            <br />
+            <div class="form-group">
+                <label asp-for="Password" class="control-label">Password:</label>
+                <input type="password" class="form-control" @bind="user.Password"/>
+            </div>
+            <br />
+            <div class="form-group">
+                <button type="button" class="btn btn-primary" @onclick=SubmitLogin >Login</button>
+            </div>
+        </form>
+        <br />
+        @if(loginFailed)
+        {
+            <p class="text-danger">Incorrect username or password</p>
+        }
+    </div>
+</div>
 
 @code {
-    public string userName = "";
-    public string passWord = "";
-    public class User
+    private string API_URL = "https://localhost:7275/api/BlackHatsApp/";
+    private string API_AUTH_PATH = "Authenticate";
+    private bool loginFailed = false;
+
+    private class UserModel
     {
-        public int UserId { get; set; }
-        public string? Username { get; set; }
-        public string? Password { get; set; }
+        public int Userid { get; set; }
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
     }
 
-    string API_URL = "https://localhost:7275/api/BlackHatsApp/";
+    private UserModel user = new UserModel() { Userid = 0 };
 
-    private IEnumerable<User> user = Array.Empty<User>();
-
-    private async Task refreshList()
+    /*
+    * Sends an HTTP POST request to the API to check for any valid users that match the username & password
+    */
+    public async Task SubmitLogin()
     {
-        HttpClient httpClient = new HttpClient();
-        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "GetUsers");
-        httpClient.Dispose();
-        using var responseStream = await response.Content.ReadAsStreamAsync();
-        user = await JsonSerializer.DeserializeAsync<IEnumerable<User>>(responseStream);
-    }
-
-    private async Task addUser()
-    {
-        // Create an anonymous object to hold user data
-        var userData = new
-        {
-            UserName = userName,
-            Password = passWord
-        };
-
-        // Serialize the user data to JSON
-        var jsonContent = JsonSerializer.Serialize(userData);
-
-        // Create StringContent with JSON data and specify the content type
+        var jsonContent = JsonSerializer.Serialize(user);
         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-        // Send POST request with JSON content
         using var httpClient = new HttpClient();
-        var response = await httpClient.PostAsync(API_URL + "AddUsers", content);
+        HttpResponseMessage response = await httpClient.PostAsync(API_URL + API_AUTH_PATH, content); 
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        IEnumerable<object>? userIds = await JsonSerializer.DeserializeAsync<IEnumerable<object>>(responseStream);
 
-        if (response.IsSuccessStatusCode)
+        // check if any user is valid
+        if(userIds == null || userIds.Count() == 0)
         {
-            string res = await response.Content.ReadAsStringAsync();
-            await JsRuntime.InvokeVoidAsync("alert", res);
-            await this.refreshList();
+            loginFailed = true;
         }
         else
         {
-            string error = $"Failed to add user. Status code: {response.StatusCode}";
-            await JsRuntime.InvokeVoidAsync("alert", error);
+            AuthState.SetAuthenticatedUser(user.Username);
+            NavigationManager.NavigateTo("/", true);
         }
     }
-
-    private async Task deleteUser(string username)
-    {
-        HttpClient httpClient = new HttpClient();
-        HttpResponseMessage response = await httpClient.DeleteAsync(API_URL + "DeleteUsers?Username=" + username);
-        httpClient.Dispose();
-        using var responseStream = await response.Content.ReadAsStreamAsync();
-
-        string res = response.Content.ReadAsStringAsync().Result;
-        await JsRuntime.InvokeVoidAsync("alert", res);
-        await this.refreshList();
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        await this.refreshList();
-    }
-
-   
 }

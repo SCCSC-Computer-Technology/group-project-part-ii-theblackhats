@@ -1,6 +1,8 @@
-using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using TeamBlackHats.Data;
+using TeamBlackHats.Services;
 
 namespace TeamBlackHats
 {
@@ -16,6 +18,17 @@ namespace TeamBlackHats
             builder.Services.AddSingleton<WeatherForecastService>();
 
             builder.Services.AddHttpClient();
+
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(
+                    options =>
+                    {
+                        options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+                        options.SlidingExpiration = true;
+                        options.AccessDeniedPath = "/Forbidden/";
+                    }
+                );
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<HttpContextAccessor>();
 
             var app = builder.Build();
 
@@ -35,6 +48,10 @@ namespace TeamBlackHats
 
             app.MapBlazorHub();
             app.MapFallbackToPage("/_Host");
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+            app.UseCookiePolicy(new CookiePolicyOptions() { MinimumSameSitePolicy = SameSiteMode.Strict });
 
             app.Run();
         }

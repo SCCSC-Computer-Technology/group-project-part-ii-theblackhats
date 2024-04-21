@@ -1,0 +1,133 @@
+﻿@page "/signup"
+@using System.Text.Json
+@using System.Text
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using TeamBlackHats.Services
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
+@inject IHttpContextAccessor HttpContextAccessor
+
+<h3>Signup</h3>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form>
+            <div class="form-group">
+                <label class="control-label">Username:</label>
+                <input class="form-control" @bind="userName" />
+            </div>
+            <br />
+            <div class="form-group">
+                <label class="control-label">Password:</label>
+                <input type="password" class="form-control" @bind="passWord" />
+            </div>
+            <br />
+            <div class="form-group">
+                <label class="control-label">Confirm password:</label>
+                <input type="password" class="form-control" @bind="confirmPassword" /> 
+            </div>
+            <br />
+            <input type="button" class="btn btn-primary" @onclick=addUser value="Submit">
+        </form>
+    </div>
+</div>
+<br />
+@if(signupFailed)
+{
+    <p class="text-danger">@signupFailureReason</p>
+}
+
+@code {
+    public string userName = "";
+    public string passWord = "";
+    public string confirmPassword = "";
+    public bool signupFailed = false;
+    public string signupFailureReason = "";
+
+    public class User
+    {
+        public int UserId { get; set; }
+        public string? Username { get; set; }
+        public string? Password { get; set; }
+    }
+
+    string API_URL = "https://localhost:7275/api/BlackHatsApp/";
+
+    private IEnumerable<User> user = Array.Empty<User>();
+
+    private async Task refreshList()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "GetUsers");
+        httpClient.Dispose();
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        user = await JsonSerializer.DeserializeAsync<IEnumerable<User>>(responseStream);
+    }
+
+    private async Task addUser()
+    {
+        if(userName == null || passWord == null || confirmPassword == null || userName == "" || passWord == "" || confirmPassword == "")
+        {
+            signupFailed = true;
+            signupFailureReason = "Textbox cannot be empty";
+            return;
+        }
+        if(passWord != confirmPassword)
+        {
+            signupFailed = true;
+            signupFailureReason = "Passwords do not match";
+            return;
+        }
+        // Create an anonymous object to hold user data
+        var userData = new
+        {
+            UserName = userName,
+            Password = passWord
+        };
+
+        // Serialize the user data to JSON
+        var jsonContent = JsonSerializer.Serialize(userData);
+
+        // Create StringContent with JSON data and specify the content type
+        var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+        // Send POST request with JSON content
+        using var httpClient = new HttpClient();
+        var response = await httpClient.PostAsync(API_URL + "AddUsers", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            string res = await response.Content.ReadAsStringAsync();
+            await JsRuntime.InvokeVoidAsync("alert", res);
+            // redirect to index
+            AuthState.SetAuthenticatedUser(userName);
+            NavigationManager.NavigateTo("/", true);
+        }
+        else
+        {
+            string error = $"Failed to add user. Status code: {response.StatusCode}";
+            await JsRuntime.InvokeVoidAsync("alert", error);
+        }
+    }
+
+    private async Task deleteUser(string username)
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.DeleteAsync(API_URL + "DeleteUsers?Username=" + username);
+        httpClient.Dispose();
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+
+        string res = response.Content.ReadAsStringAsync().Result;
+        await JsRuntime.InvokeVoidAsync("alert", res);
+        await this.refreshList();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await this.refreshList();
+    }
+
+   
+}
