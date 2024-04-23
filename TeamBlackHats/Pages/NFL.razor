@@ -1,0 +1,72 @@
+﻿@page "/NFL"
+@using System.Text.Json
+
+<h3>NFL Team Data</h3>
+@if(teams == null)
+{
+    <p>Loading...NFL</p>
+
+}
+else{
+    <div style="max-height: 300px; overflow-y: auto;">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>TeamID</th>
+                    <th>TeamName</th>
+                    <th>Rank</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var team in teams)
+                {
+                    <tr>
+                        <td>@team.TeamID</td>
+                        <td>@team.TeamName</td>
+                        <td>@team.Rank</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <hr />
+    <form>
+        <label>
+            TeamID Data
+        </label>
+        <input type="text" @bind="teamID"/>
+        <button type="button" class="btn btn-primary" @onclick=teamidsearch>submit</button>
+    </form>
+}
+
+@code {
+    private class NFLTeam
+    {
+        public string TeamID{ get; set; } 
+        public string TeamName{ get; set; }
+        public int Rank{ get; set; }
+    }
+    private List<NFLTeam> teams;
+    private string teamID;
+
+    string API_URL = "https://localhost:7275/api/BlackHatsApp/";
+
+    protected override async Task OnInitializedAsync()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "GetNFLTeamStats");
+        httpClient.Dispose();
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        teams = await JsonSerializer.DeserializeAsync<List<NFLTeam>>(responseStream);
+    }
+    private async Task teamidsearch()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "GetNFLTeamStats");
+        httpClient.Dispose();
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        var allteams = await JsonSerializer.DeserializeAsync<List<NFLTeam>>(responseStream);
+        teams = allteams.Where(team => team.TeamID == teamID).ToList();
+    }
+
+}
