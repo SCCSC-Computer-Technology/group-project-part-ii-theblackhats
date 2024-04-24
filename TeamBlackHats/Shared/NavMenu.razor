@@ -32,6 +32,24 @@
                 <NavLink class="nav-link" href="NFL">
                     <span class="oi oi-plus" aria-hidden="true"></span> NFL
                 </NavLink>
+                @if (expandSubMenu)
+                {
+                    <NavLink class="expand-menu" href="Offense">
+                        <span class="oi oi-heart" aria-hidden="true"></span> NFL Offense Team
+                    </NavLink>
+                    <NavLink class="expand-menu" href="Defense">
+                        <span class="oi oi-heart" aria-hidden="true"></span> NFL Defense Team
+                    </NavLink>
+                    <NavLink class="expand-menu" href="Coach">
+                        <span class="oi oi-heart" aria-hidden="true"></span> NFL Coach
+                    </NavLink>
+                    <NavLink class="expand-menu" href="Stats">
+                        <span class="oi oi-heart" aria-hidden="true"></span> NFL Team Stats
+                    </NavLink>
+                    <NavLink class="expand-menu" href="History">
+                        <span class="oi oi-heart" aria-hidden="true"></span> NFL Team History
+                    </NavLink>
+                }
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="NBA">
@@ -68,6 +86,7 @@
 
 @code {
     private bool collapseNavMenu = true;
+    private bool expandSubMenu;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
