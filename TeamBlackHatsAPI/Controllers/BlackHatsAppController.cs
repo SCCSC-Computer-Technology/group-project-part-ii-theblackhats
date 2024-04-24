@@ -70,7 +70,7 @@ namespace TeamBlackHatsAPI.Controllers
 
         public JsonResult GetNBAPlayerStats()
         {
-            string? query = "select * from dbo.NBA_Player_Stats";
+            string? query = "SELECT Player, Pos, Tm, FG, TRB, FT, AST, STL, BLK FROM dbo.NBA_Player_Stats WHERE Year IN ('1997-1998') ORDER BY Player";
             DataTable table = new DataTable();
             string? sqlDatasource = _configuration.GetConnectionString("blackHatsDBCon");
             SqlDataReader myReader;
@@ -94,7 +94,7 @@ namespace TeamBlackHatsAPI.Controllers
 
         public JsonResult GetNBATeamStats()
         {
-            string? query = "select * from dbo.nba_team_stats_00_to_21";
+            string? query = "SELECT TEAM, GP, W, L, PTS, FGA, REB, AST, BLK from dbo.nba_team_stats_00_to_21 WHERE SEASON IN ('2020-21') ORDER BY TEAM";
             DataTable table = new DataTable();
             string? sqlDatasource = _configuration.GetConnectionString("blackHatsDBCon");
             SqlDataReader myReader;

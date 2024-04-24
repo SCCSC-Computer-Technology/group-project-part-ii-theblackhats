@@ -1,0 +1,94 @@
+﻿@page "/NBATeams"
+@using System.Text.Json
+
+<h3>NBA Team Data</h3>
+@if (teams == null)
+{
+    <p>Loading...NBA Teams</p>
+
+}
+else
+{
+    <div style="max-height: 300px; overflow-y: auto;">
+        <table class="table table-success table-striped">
+            <thead>
+                <tr>
+                    <th>TEAM</th>
+                    <th>GP</th>
+                    <th>W</th>
+                    <th>L</th>
+                    <th>PTS</th>
+                    <th>FGA</th>
+                    <th>REB</th>
+                    <th>AST</th>
+                    <th>BLK</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var team in teams)
+                {
+                    <tr>
+                        <td>@team.TEAM</td>
+                        <td>@team.GP</td>
+                        <td>@team.W</td>
+                        <td>@team.L</td>
+                        <td>@team.PTS</td>
+                        <td>@team.FGA</td>
+                        <td>@team.REB</td>
+                        <td>@team.AST</td>
+                        <td>@team.BLK</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <hr />
+    <form>
+        <label>
+            Basketball Team's Data
+        </label>
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="floatingInput" @bind="teamInfo" />
+            <button type="button" class="btn btn-primary" @onclick=teamnamesearch>submit</button>
+            <label for="floatingInput">Search Team Name</label>
+        </div>
+    </form>
+}
+
+@code {
+    private class NBARoster
+    {
+        public string TEAM { get; set; } = string.Empty;
+        public string GP { get; set; } = string.Empty;
+        public string W { get; set; } = string.Empty;
+        public string L { get; set; } = string.Empty;
+        public string PTS { get; set; } = string.Empty;
+        public string FGA { get; set; } = string.Empty;
+        public string REB { get; set; } = string.Empty;
+        public string AST { get; set; } = string.Empty;
+        public string BLK { get; set; } = string.Empty;
+    }
+    
+    private List<NBARoster> teams;
+    private string teamInfo;
+
+    string API_URL = "https://localhost:7275/api/BlackHatsApp/";
+
+    protected override async Task OnInitializedAsync()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "GetNBATeamStats");
+        httpClient.Dispose();
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        teams = await JsonSerializer.DeserializeAsync<List<NBARoster>>(responseStream);
+    }
+    private async Task teamnamesearch()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "GetNBATeamStats");
+        httpClient.Dispose();
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        var allteams = await JsonSerializer.DeserializeAsync<List<NBARoster>>(responseStream);
+        teams = allteams.Where(team => team.TEAM == teamInfo).ToList();
+    }
+}
