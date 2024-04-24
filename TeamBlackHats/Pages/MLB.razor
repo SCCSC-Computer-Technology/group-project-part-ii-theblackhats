@@ -1,0 +1,93 @@
+﻿@page "/MLB"
+@using System.Text.Json
+
+<h3>MLB Data</h3>
+@if (players == null)
+{
+    <p>Loading...MLB</p>
+
+}
+else
+{
+    <div style="max-height: 300px; overflow-y: auto;">
+        <table class="table table-success table-striped">
+            <thead>
+                <tr>
+                    <th>playerID</th>
+                    <th>Player Name</th>
+                    <th>weight</th>
+                    <th>height</th>
+                    <th>bats</th>
+                    <th>Throws</th>
+                    <th>Season</th>
+                    <th>League</th>
+                    <th>Team</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var team in players)
+                {
+                    <tr>
+                        <td>@team.playerID</td>
+                        <td>@team.PlayerName</td>
+                        <td>@team.weight</td>
+                        <td>@team.height</td>
+                        <td>@team.bats</td>
+                        <td>@team.throws</td>
+                        <td>@team.Season</td>
+                        <td>@team.League</td>
+                        <td>@team.Team</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <hr />
+    <form>
+        <label>
+            Baseball Player's Data
+        </label>
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="floatingInput" @bind="playername" />
+            <button type="button" class="btn btn-primary" @onclick=playernamesearch>submit</button>
+            <label for="floatingInput">Search Player Name</label>
+        </div>
+    </form>
+}
+
+@code {
+    private class MLBPlayer
+    {
+        public string playerID { get; set; }
+        public string PlayerName { get; set; }
+        public string weight { get; set; }
+        public string height { get; set; }
+        public string bats { get; set; }
+        public string throws { get; set; }
+        public string Season { get; set; }
+        public string League { get; set; }
+        public string Team { get; set; }
+    }
+    private List<MLBPlayer> players;
+    private string playername;
+
+    string API_URL = "https://localhost:7275/api/BlackHatsApp/";
+
+    protected override async Task OnInitializedAsync()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "GetMLBStats");
+        httpClient.Dispose();
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        players = await JsonSerializer.DeserializeAsync<List<MLBPlayer>>(responseStream);
+    }
+    private async Task playernamesearch()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "GetMLBStats");
+        httpClient.Dispose();
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        var allplayers = await JsonSerializer.DeserializeAsync<List<MLBPlayer>>(responseStream);
+        players = allplayers.Where(team => team.PlayerName == playername).ToList();
+    }
+}

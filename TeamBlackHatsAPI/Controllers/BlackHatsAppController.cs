@@ -22,7 +22,7 @@ namespace TeamBlackHatsAPI.Controllers
 
         public JsonResult GetMLBStats()
         {
-            string? query = "select * from dbo.MLBStats";
+            string? query = $"SELECT PlayerName, playerID, Season, weight, height, bats, throws, League, Team FROM dbo.MLBStats WHERE season IN ('2016', '2015', '2014') ORDER BY playerID";
             DataTable table = new DataTable();
             string? sqlDatasource = _configuration.GetConnectionString("blackHatsDBCon");
             SqlDataReader myReader;
@@ -32,6 +32,30 @@ namespace TeamBlackHatsAPI.Controllers
                 using(SqlCommand myCommand = new SqlCommand(query, myCon))
                 {
                     myReader=myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+
+            return new JsonResult(table);
+        }
+
+        [HttpGet]
+        [Route("GetMLBTeamStats")]
+
+        public JsonResult GetMLBTeamStats()
+        {
+            string? query = $"SELECT Team, playerID, teamID, Season, League, Franchise FROM dbo.MLBStats WHERE season IN ('2016', '2015', '2014') ORDER BY playerID";
+            DataTable table = new DataTable();
+            string? sqlDatasource = _configuration.GetConnectionString("blackHatsDBCon");
+            SqlDataReader myReader;
+            using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myReader = myCommand.ExecuteReader();
                     table.Load(myReader);
                     myReader.Close();
                     myCon.Close();

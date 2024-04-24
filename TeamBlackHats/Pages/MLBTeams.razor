@@ -1,0 +1,84 @@
+﻿@page "/MLBTeams"
+@using System.Text.Json
+
+<h3>MLB Team Data</h3>
+@if (teams == null)
+{
+    <p>Loading...MLB Teams</p>
+
+}
+else
+{
+    <div style="max-height: 300px; overflow-y: auto;">
+        <table class="table table-success table-striped">
+            <thead>
+                <tr>
+                    <th>Team</th>
+                    <th>playerID</th>
+                    <th>teamID</th>
+                    <th>Season</th>
+                    <th>League</th>
+                    <th>Franchise</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var team in teams)
+                {
+                    <tr>
+                        <td>@team.Team</td>
+                        <td>@team.playerID</td>
+                        <td>@team.teamID</td>
+                        <td>@team.Season</td>
+                        <td>@team.League</td>
+                        <td>@team.Franchise</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <hr />
+    <form>
+        <label>
+            Baseball Team's Data
+        </label>
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" id="floatingInput" @bind="teamInfo" />
+            <button type="button" class="btn btn-primary" @onclick=teamnamesearch>submit</button>
+            <label for="floatingInput">Search Team Name</label>
+        </div>
+    </form>
+}
+
+@code {
+    private class MLBTeam
+    {
+        public string Team { get; set; } = string.Empty;
+        public string playerID { get; set; } = string.Empty;
+        public string teamID { get; set; } = string.Empty;
+        public string Season { get; set; } = string.Empty;
+        public string League { get; set; } = string.Empty;
+        public string Franchise { get; set; } = string.Empty;
+    }
+    private List<MLBTeam> teams;
+    private string teamInfo;
+
+    string API_URL = "https://localhost:7275/api/BlackHatsApp/";
+
+    protected override async Task OnInitializedAsync()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "GetMLBTeamStats");
+        httpClient.Dispose();
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        teams = await JsonSerializer.DeserializeAsync<List<MLBTeam>>(responseStream);
+    }
+    private async Task teamnamesearch()
+    {
+        HttpClient httpClient = new HttpClient();
+        HttpResponseMessage response = await httpClient.GetAsync(API_URL + "GetMLBTeamStats");
+        httpClient.Dispose();
+        using var responseStream = await response.Content.ReadAsStreamAsync();
+        var allteams = await JsonSerializer.DeserializeAsync<List<MLBTeam>>(responseStream);
+        teams = allteams.Where(team => team.Team == teamInfo).ToList();
+    }
+}
